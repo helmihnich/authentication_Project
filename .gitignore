@@ -28,3 +28,5 @@ dist-ssr
 # Ignore Firebase service account files
 *.json
 Server/config/authen-d8075-firebase-adminsdk-oe1ff-73d6cd0c8d.json
+
+config/authen-d8075-firebase-adminsdk-oe1ff-73d6cd0c8d.json
