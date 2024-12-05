@@ -5,11 +5,14 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "../api/axios";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,}$/;
+const PHONE_REGEX = /^[0-9]{10,15}$/; // Adjust as per your requirements
 const REGISTER_URL = "/register";
 
 interface RegisterResponse {
@@ -28,6 +31,10 @@ function Register() {
   const [validPwd, setValidPwd] = useState(false);
   const [pwdFocus, setPwdFocus] = useState(false);
 
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [validPhoneNumber, setValidPhoneNumber] = useState(false);
+  const [phoneNumberFocus, setPhoneNumberFocus] = useState(false);
+
   const [matchPwd, setMatchPwd] = useState("");
   const [validMatch, setValidMatch] = useState(false);
   const [matchFocus, setMatchFocus] = useState(false);
@@ -40,37 +47,36 @@ function Register() {
   }, []);
 
   useEffect(() => {
-    const result = USER_REGEX.test(user);
-    console.log(result);
-    console.log(user);
-    setValidName(result);
+    setValidName(USER_REGEX.test(user));
   }, [user]);
 
   useEffect(() => {
-    const result = PWD_REGEX.test(pwd);
-    console.log(result);
-    console.log(pwd);
-    setValidPwd(result);
-    const match = pwd === matchPwd;
-    setValidMatch(match);
+    setValidPwd(PWD_REGEX.test(pwd));
+    setValidMatch(pwd === matchPwd);
   }, [pwd, matchPwd]);
 
   useEffect(() => {
+    setValidPhoneNumber(PHONE_REGEX.test(phoneNumber.replace(/\D/g, ""))); // Validate only numeric digits
+  }, [phoneNumber]);
+
+  useEffect(() => {
     setErrMsg("");
-  }, [user, pwd, matchPwd]);
+  }, [user, pwd, matchPwd, phoneNumber]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const v1 = USER_REGEX.test(user);
     const v2 = PWD_REGEX.test(pwd);
-    if (!v1 || !v2) {
+    const v3 = PHONE_REGEX.test(phoneNumber.replace(/\D/g, ""));
+
+    if (!v1 || !v2 || !v3) {
       setErrMsg("Invalid Entry");
       return;
     }
 
     const response = await axios.post<RegisterResponse>(
       REGISTER_URL,
-      JSON.stringify({ user, pwd }),
+      JSON.stringify({ user, pwd, phoneNumber }),
       {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
@@ -84,21 +90,20 @@ function Register() {
       setErrMsg("Registration failed");
       errRef.current?.focus();
     }
-    console.log(response.data); // Typed as `RegisterResponse`
+    console.log(response.data); // Typed as RegisterResponse
     console.log(response.data.accessToken); // AccessToken is strongly typed
     console.log(JSON.stringify(response)); // Stringify response for debugging
 
     setSuccess(true);
     // Clear user inputs or perform additional actions
   };
-
   return (
     <>
       {success ? (
         <section>
           <h1>Success!</h1>
           <p>
-            <a href="#">Sign In</a>
+            <a href="/login">Sign In</a>
           </p>
         </section>
       ) : (
@@ -112,8 +117,9 @@ function Register() {
           </p>
           <h1>Register</h1>
           <form onSubmit={handleSubmit}>
+            {/* Username Field */}
             <label htmlFor="username">
-              username:
+              Username:
               <span className={validName ? "valid" : "hide"}>
                 <FontAwesomeIcon icon={faCheck} />
               </span>
@@ -128,7 +134,7 @@ function Register() {
               autoComplete="off"
               onChange={(e) => setUser(e.target.value)}
               required
-              aria-invalid={validName ? "false" : "true"}
+              aria-invalid={!validName}
               aria-describedby="uidnote"
               onFocus={() => setUserFocus(true)}
               onBlur={() => setUserFocus(false)}
@@ -139,12 +145,45 @@ function Register() {
                 userFocus && user && !validName ? "instructions" : "offscreen"
               }
             >
+              <FontAwesomeIcon icon={faInfoCircle} />4 to 24 characters. Must
+              begin with a letter.
+            </p>
+
+            {/* Phone Number Field */}
+            <label htmlFor="phoneNumber">
+              Phone Number:
+              <span className={validPhoneNumber ? "valid" : "hide"}>
+                <FontAwesomeIcon icon={faCheck} />
+              </span>
+              <span
+                className={
+                  validPhoneNumber || !phoneNumber ? "hide" : "invalid"
+                }
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </span>
+            </label>
+            <PhoneInput
+              country={"tn"}
+              value={phoneNumber}
+              onChange={(value) => setPhoneNumber(value)}
+              inputProps={{
+                name: "phone",
+                required: true,
+                onFocus: () => setPhoneNumberFocus(true),
+                onBlur: () => setPhoneNumberFocus(false),
+              }}
+            />
+            <p
+              id="phonenote"
+              className={
+                phoneNumberFocus && phoneNumber && !validPhoneNumber
+                  ? "instructions"
+                  : "offscreen"
+              }
+            >
               <FontAwesomeIcon icon={faInfoCircle} />
-              4 to 24 characters.
-              <br />
-              Must begin with letter.
-              <br />
-              Letters, numbers, underscores, and hyphens allowed.
+              Enter a valid phone number (10-15 digits).
             </p>
 
             <label htmlFor="password">
@@ -225,7 +264,7 @@ function Register() {
             <br />
             <span className="line">
               {/*put router link here*/}
-              <a href="#">Sign In</a>
+              <a href="/login">Sign In</a>
             </span>
           </p>
         </section>
