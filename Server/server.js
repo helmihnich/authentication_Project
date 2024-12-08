@@ -39,9 +39,9 @@ const generateJWT = (userId, email) => {
 
 // Create a route to handle user registration
 app.post("/register", async (req, res) => {
-  const { user, pwd, phoneNumber } = req.body;
+  const { user, pwd, phoneNumber, role } = req.body;
 
-  if (!user || !pwd || !phoneNumber) {
+  if (!user || !pwd || !phoneNumber || !role) {
     return res
       .status(400)
       .json({ error: "Username, password, and phone number are required." });
@@ -69,6 +69,7 @@ app.post("/register", async (req, res) => {
       username: user,
       password: hashedPassword, // Store the hashed password
       phoneNumber: phoneNumber,
+      role: role,
     });
 
     res.status(201).json({ message: "User registered successfully." });
@@ -106,6 +107,7 @@ app.post("/auth", async (req, res) => {
     const userData = snapshot.val();
     const userId = Object.keys(userData)[0]; // Firebase stores data with unique keys
     const storedPassword = userData[userId].password;
+    const roles = userData[userId].role;
 
     // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(pwd, storedPassword);
@@ -116,11 +118,12 @@ app.post("/auth", async (req, res) => {
 
     // Generate JWT for the user
     const email = userData[userId].email || null; // Optional: Use email from Firebase user data if available
-    const token = generateJWT(userId, email);
+    const accessToken = generateJWT(userId, email, roles);
 
     res.status(200).json({
       message: "Login successful.",
-      token, // Send back the JWT token
+      accessToken, // Send back the JWT token
+      roles,
     });
   } catch (err) {
     console.error("Error during login:", err);

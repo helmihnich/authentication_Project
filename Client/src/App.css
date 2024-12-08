@@ -40,3 +40,48 @@
 .read-the-docs {
   color: #888;
 }
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+  appearance: none; /* Remove default arrow */
+  -moz-appearance: none; /* Remove default arrow for Firefox */
+  -webkit-appearance: none; /* Remove default arrow for Safari/Chrome */
+  position: relative;
+}
+
+select:hover {
+  border-color: #888; /* Slightly darker border on hover */
+}
+
+select:focus {
+  outline: none;
+  border-color: #007bff; /* Change border color to indicate focus */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+select option {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.select-container {
+  position: relative;
+}
+
+.select-container::after {
+  content: "▼"; /* Custom dropdown arrow */
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Make sure the arrow doesn't interfere with clicks */
+  font-size: 12px;
+  color: #666;
+}

@@ -39,8 +39,15 @@ function Register() {
   const [validMatch, setValidMatch] = useState(false);
   const [matchFocus, setMatchFocus] = useState(false);
 
+  const [role, setRole] = useState(""); // New state for role
   const [errMsg, setErrMsg] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const roles = [
+    { value: "admin", label: "Admin" },
+    { value: "user", label: "User" },
+    { value: "editor", label: "Editor" },
+  ]; // List of roles
 
   useEffect(() => {
     userRef.current?.focus();
@@ -61,7 +68,7 @@ function Register() {
 
   useEffect(() => {
     setErrMsg("");
-  }, [user, pwd, matchPwd, phoneNumber]);
+  }, [user, pwd, matchPwd, phoneNumber, role]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,7 +83,7 @@ function Register() {
 
     const response = await axios.post<RegisterResponse>(
       REGISTER_URL,
-      JSON.stringify({ user, pwd, phoneNumber }),
+      JSON.stringify({ user, pwd, phoneNumber, role }),
       {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
@@ -97,6 +104,7 @@ function Register() {
     setSuccess(true);
     // Clear user inputs or perform additional actions
   };
+
   return (
     <>
       {success ? (
@@ -186,8 +194,27 @@ function Register() {
               Enter a valid phone number (10-15 digits).
             </p>
 
+            {/* Role Selection Field */}
+            <label htmlFor="role">Role:</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Select a role
+              </option>
+              {roles.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Password Fields */}
             <label htmlFor="password">
-              Password:{" "}
+              Password:
               <span className={validPwd ? "valid" : "hide"}>
                 <FontAwesomeIcon icon={faCheck} />
               </span>
@@ -201,7 +228,7 @@ function Register() {
               autoComplete="off"
               onChange={(e) => setPwd(e.target.value)}
               required
-              aria-invalid={validPwd ? "false" : "true"}
+              aria-invalid={!validPwd}
               aria-describedby="pwdnote"
               onFocus={() => setPwdFocus(true)}
               onBlur={() => setPwdFocus(false)}
@@ -210,18 +237,9 @@ function Register() {
               id="pwdnote"
               className={pwdFocus && !validPwd ? "instructions" : "offscreen"}
             >
-              <FontAwesomeIcon icon={faInfoCircle} />
-              8 characters minimum.
-              <br />
-              Must include at least one uppercase letter, one lowercase letter,
-              one number, and one special character.
-              <br />
-              Allowed special characters: <span aria-label="hashtag">#</span>
-              <span aria-label="exclamation mark">!</span>
-              <span aria-label="at symbol">@</span>
-              <span aria-label="dollar sign">$</span>
-              <span aria-label="percent">%</span>
+              <FontAwesomeIcon icon={faInfoCircle} />8 characters minimum.
             </p>
+
             <label htmlFor="confirm_pwd">
               Confirm Password:
               <FontAwesomeIcon
@@ -239,7 +257,7 @@ function Register() {
               onChange={(e) => setMatchPwd(e.target.value)}
               value={matchPwd}
               required
-              aria-invalid={validMatch ? "false" : "true"}
+              aria-invalid={!validMatch}
               aria-describedby="confirmnote"
               onFocus={() => setMatchFocus(true)}
               onBlur={() => setMatchFocus(false)}
@@ -253,20 +271,20 @@ function Register() {
               <FontAwesomeIcon icon={faInfoCircle} />
               Must match the first password input field.
             </p>
+
             <button
-              disabled={!validName || !validPwd || !validMatch ? true : false}
+              type="submit"
+              disabled={
+                !validName ||
+                !validPwd ||
+                !validMatch ||
+                !validPhoneNumber ||
+                !role
+              }
             >
-              Sign Up
+              Register
             </button>
           </form>
-          <p>
-            Already registered?
-            <br />
-            <span className="line">
-              {/*put router link here*/}
-              <a href="/login">Sign In</a>
-            </span>
-          </p>
         </section>
       )}
     </>
